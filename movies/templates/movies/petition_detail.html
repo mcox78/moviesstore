@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <h1 class="mb-3">{{ petition.title }}</h1>
+
+    <div class="mb-3 p-3 bg-light rounded shadow-sm">
+        <p>{{ petition.description }}</p>
+        <p class="text-muted">Created by {{ petition.created_by.username }} on {{ petition.created_at|date:"F j, Y, g:i a" }}</p>
+        <p><strong>Total votes:</strong> {{ vote_count }}</p>
+    </div>
+
+    {% if not has_voted %}
+        <a href="{% url 'movies.petition_vote' petition.id %}" class="btn btn-primary">Vote for this petition</a>
+    {% else %}
+        <p class="text-success">You have already voted.</p>
+    {% endif %}
+
+    <a href="{% url 'movies.petition_list' %}" class="btn btn-link mt-3">Back to Petitions</a>
+</div>
+{% endblock %}

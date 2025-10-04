@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Movie, Review
+from .models import Movie, Review, Petition, PetitionVote
 from django.contrib.auth.decorators import login_required
+from .forms import PetitionForm
 
 def index(request):
     search_term = request.GET.get('search')
@@ -60,3 +61,41 @@ def delete_review(request, id, review_id):
     review= get_object_or_404(Review, id=review_id, user=request.user)
     review.delete()
     return redirect('movies.show', id=id)
+
+@login_required
+def petition_list(request):
+    petitions = Petition.objects.all().order_by('-created_at')
+    return render(request, 'movies/petition_list.html', {'petitions': petitions})
+
+
+@login_required
+def petition_create(request):
+    if request.method == 'POST':
+        form = PetitionForm(request.POST)
+        if form.is_valid():
+            petition = form.save(commit=False)
+            petition.created_by = request.user
+            petition.save()
+            return redirect('movies.petition_list')
+    else:
+        form = PetitionForm()
+    return render(request, 'movies/petition_create.html', {'form': form})
+
+
+
+@login_required
+def petition_detail(request, id):
+    petition = get_object_or_404(Petition, id=id)
+    has_voted = PetitionVote.objects.filter(petition=petition, user=request.user).exists()
+    return render(request, 'movies/petition_detail.html', {
+        'petition': petition,
+        'has_voted': has_voted,
+        'vote_count': petition.votes.count()
+    })
+
+
+@login_required
+def petition_vote(request, id):
+    petition = get_object_or_404(Petition, id=id)
+    PetitionVote.objects.get_or_create(petition=petition, user=request.user)
+    return redirect('movies.petition_detail', id=petition.id)
